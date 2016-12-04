@@ -1,13 +1,32 @@
-#!/Users/sma/anaconda3/bin/python
+'''
+PyPSD.py
+========
+usage: pypsd.py [-h] inputfile binsfile
+
+A Python script for calculating the particle size distribution (PSD) of an
+emulsion. You input a text file with your particle areas determined with, for
+example, the ImageJ scientific imaging program. You also need to have a text
+file with the 'bins' used to classify your particles by diameter.
+'''
+
 import numpy as np
-# import matplotlib.pyplot as plt
-# from matplotlib.ticker import ScalarFormatter
-import sys
+from matplotlib import pyplot as plt
+from matplotlib.ticker import ScalarFormatter
+import argparse
 
-infile = sys.argv[1]
+# Argparse stuff
+parser = argparse.ArgumentParser()
+parser.add_argument("inputfile", help="File containing the particle areas", type=str)
+parser.add_argument("binsfile", help="File containing the diameter bins", type=str)
+args = parser.parse_args()
+
+# Read input file from command line, create arrays
+infile = args.inputfile
+basename = infile.split('.')[0]
 particles = np.loadtxt(infile)
-dmin, dmax, bins = np.loadtxt("bins.dat", unpack=True)
+dmin, dmax, bins = np.loadtxt(args.binsfile, unpack=True)
 
+# A function for creating and then solving a linear equation
 def distribution(values, cutoff):
     n = np.argmax(values>cutoff)
     point2 = np.array([bins[n], values[n]])
@@ -35,6 +54,54 @@ vpct = vi * (1/np.sum(vi)) * 100
 ncum = np.cumsum(npct, dtype=float)
 acum = np.cumsum(apct, dtype=float)
 vcum = np.cumsum(vpct, dtype=float)
+
+# Data for distributions
+np.savetxt(basename + '_distdata.txt', \
+           np.c_[bins, npct, apct, vpct], \
+           fmt=('%07.3f', '%07.3f', '%07.3f', '%07.3f'), delimiter='    ', \
+           header='Bins[um]'+1*" "+ 'Number'+5*" "+'Area'+7*" "+'Volume')
+
+### Plot with matplotlib
+fig = plt.figure(1, figsize=(12, 9))
+fig.set_tight_layout(True)
+
+# Upper subplot, significant samples
+plt.subplot(211)
+plt.grid(True, which="both")
+plt.title("Significant Sample Average")
+plt.xlabel("Samples")
+plt.ylabel("Cumulative Average")
+plt.plot(avgcum, lw=2.0)
+
+# Lower subplot, size distributions
+ax = plt.subplot(212)
+plt.title("Droplet Size Distribution")
+plt.xlabel("Diameter (um)")
+plt.ylabel("Differential (%)")
+plt.grid(True, which="both")
+plt.xlim((0.01,100.0))
+plt.xscale('log')
+ax.xaxis.set_major_formatter(ScalarFormatter())
+plt.plot(bins, npct, label='Number', lw=2.5, color='red')
+plt.plot(bins, apct, label='Area', lw=2.5, color='purple')
+plt.plot(bins, vpct, label='Volume', lw=2.5, color='green')
+plt.legend()
+
+fig.savefig(basename + '_distributions.png') # saves to png file
+# plt.ion()
+# plt.pause(0.001)
+# plt.show()
+###
+
+# User input for peaks
+# print('Are there any non-monomodal distributions? Just leave blank if not.')
+# distro = input('(Options: number, area, volume): ') or 'none'
+# if distro is not 'none':
+#     print('\n{0} distribution selected.'.format(distro))
+#     user_diams = input('Input approx values for mins, separated by commas: ')
+#     a = [float(x) for x in user_diams.split(',')]
+#     print(a)
+
 
 # Number distributions
 nD10 = distribution(ncum, 10)
@@ -70,44 +137,23 @@ vmedian = bins[np.argmax(vcum>=50)]
 D_1_0 = np.sum(ni * bins)/np.sum(ni)
 D_3_2 = np.sum(ni * bins**3)/np.sum(ni * bins**2)
 D_4_3 = np.sum(ni * bins**4)/np.sum(ni * bins**3)
+# According to Dr. Villafana
 # D_1_0 = np.sum(diameters)/np.sum(ni)
 # D_3_2 = np.sum(diameters**3)/np.sum(diameters**2)
 # D_4_3 = np.sum(diameters**4)/np.sum(diameters**3)
 
-print('\nTotal number of particles: {0}\n'.format(particles.size))
-print(9*" " + 'Number' + 4*" " + 'Surface' + 3*" " + 'Volume')
-print(36*"=")
-print('D10:    {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nD10, aD10, vD10))
-print('D50:    {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nD50, aD50, vD50))
-print('D90:    {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nD90, aD90, vD90))
-print(36*"-")
-print('Span:   {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nspan, aspan, vspan))
-print('Mode:   {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nmode, amode, vmode))
-print('Median: {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nmedian, amedian, vmedian))
-print(36*"-")
-print('D[1,0]: {0:6.3f}'.format(D_1_0))
-print('D[3,2]: {0:6.3f}'.format(D_3_2))
-print('D[4,3]: {0:6.3f}'.format(D_4_3))
-print()
+# Print results to file
+with open(basename + '_granulometry.txt', 'w') as outfile:
+    print(9*" " + 'Number' + 4*" " + 'Area' + 6*" " + 'Volume', file=outfile)
+    print('D10:    {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nD10, aD10, vD10), file=outfile)
+    print('D50:    {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nD50, aD50, vD50), file=outfile)
+    print('D90:    {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nD90, aD90, vD90), file=outfile)
+    print('Span:   {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nspan, aspan, vspan), file=outfile)
+    print('Mode:   {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nmode, amode, vmode), file=outfile)
+    print('Median: {0:6.3f}    {1:6.3f}    {2:6.3f}\n'.format(nmedian, amedian, vmedian), file=outfile)
+    print('D[1,0]: {0:6.3f}'.format(D_1_0), file=outfile)
+    print('D[3,2]: {0:6.3f}'.format(D_3_2), file=outfile)
+    print('D[4,3]: {0:6.3f}\n'.format(D_4_3), file=outfile)
+    print('Particles: {0}'.format(particles.size), file=outfile)
 
-# plt.figure(1)
-
-# plt.subplot(211)
-# plt.grid(True)
-# plt.title("Sample Average")
-# plt.xlabel("Samples")
-# plt.ylabel("Cumulative Average")
-# plt.plot(avgcum, lw=2.0)
-
-# plt.subplot(212)
-# # ax.xaxis.set_major_formatter(ScalarFormatter())
-# plt.title("Droplet Size Distribution")
-# plt.xlabel("Diameter (um)")
-# plt.ylabel("Differential (%)")
-# plt.grid(True)
-# # plt.xlim((0,10))
-# plt.xscale('log')
-# plt.plot(bins, npct, 'red', bins, apct, 'purple', bins, vpct, 'green', lw=2.5)
-
-# # plt.tight_layout()
 # plt.show()
