@@ -1,12 +1,10 @@
 '''
-PyPSD.py
-========
-usage: pypsd.py [-h] inputfile binsfile
+usage: python pypsd.py [-h] inputfile binsfile
 
-A Python script for calculating the particle size distribution (PSD) of an
-emulsion. You input a text file with your particle areas determined with, for
-example, the ImageJ scientific imaging program. You also need to have a text
-file with the 'bins' used to classify your particles by diameter.
+A Python script for calculating the particle size distribution (PSD) of any
+sample.
+
+Written by Sean Anderson (https://github.com/roguephysicist/PyPSD)
 '''
 
 import numpy as np
@@ -28,7 +26,7 @@ dmin, dmax, bins = np.loadtxt(args.binsfile, unpack=True)
 
 # A function for creating and then solving a linear equation
 def distribution(values, cutoff):
-    n = np.argmax(values>cutoff)
+    n = np.argmax(values>=cutoff)
     point2 = np.array([bins[n], values[n]])
     point1 = np.array([bins[n-1], values[n-1]])
     slope = (point2[1] - point1[1])/(point2[0] - point1[0])
