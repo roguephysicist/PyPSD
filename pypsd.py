@@ -4,64 +4,64 @@ usage: python pypsd.py [-h] inputfile binsfile
 A Python script for calculating the particle size distribution (PSD) of any
 sample.
 
-Written by Sean Anderson (https://github.com/roguephysicist/PyPSD)
+Written by Sean M. Anderson and Liliana Villafana-Lopez
 '''
 
+import argparse
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import ScalarFormatter
-import argparse
 
 # Argparse stuff
-parser = argparse.ArgumentParser()
-parser.add_argument("inputfile", help="File containing the particle areas", type=str)
-parser.add_argument("binsfile", help="File containing the diameter bins", type=str)
-args = parser.parse_args()
+PARSER = argparse.ArgumentParser()
+PARSER.add_argument("inputfile", help="File containing the particle areas", type=str)
+PARSER.add_argument("binsfile", help="File containing the particle diameter bins", type=str)
+ARGS = PARSER.parse_args()
 
 # Read input file from command line, create arrays
-infile = args.inputfile
-basename = infile.split('.')[0]
-particles = np.loadtxt(infile)
-dmin, dmax, bins = np.loadtxt(args.binsfile, unpack=True)
+INFILE = ARGS.inputfile
+BASENAME = INFILE.split('.txt')[0]
+PARTICLES = np.loadtxt(INFILE)
+BINS = np.loadtxt(ARGS.binsfile, unpack=True)
 
-# A function for creating and then solving a linear equation
 def distribution(values, cutoff):
-    n = np.argmax(values>=cutoff)
-    point2 = np.array([bins[n], values[n]])
-    point1 = np.array([bins[n-1], values[n-1]])
+    """ a function for creating and then solving a linear equation """
+    counter = np.argmax(values >= cutoff)
+    point2 = np.array([BINS[counter], values[counter]])
+    point1 = np.array([BINS[counter-1], values[counter-1]])
     slope = (point2[1] - point1[1])/(point2[0] - point1[0])
     intercept = point2[1] - slope*point2[0]
     dist = (cutoff - intercept) * (1/slope)
     return dist
 
 # Rolling mean for significant sample size
-avgcum = np.cumsum(particles, dtype=float)/np.arange(1, particles.size+1)
+AVGCUM = np.cumsum(PARTICLES, dtype=float)/np.arange(1, PARTICLES.size+1)
 
 # Binning and frequencies
-diameters = 2 * np.sqrt(particles/np.pi)
-ni = np.bincount(np.digitize(diameters, bins), minlength=bins.size) # dmin
-ai = 4 * np.pi * (bins/2)**2 * ni
-vi = (4.0/3.0) * np.pi * (bins/2)**3 * ni
+DIAMETERS = 2 * np.sqrt(PARTICLES/np.pi)
+NI = np.bincount(np.digitize(DIAMETERS, BINS), minlength=BINS.size) # dmin
+AI = 4 * np.pi * (BINS/2)**2 * NI
+VI = (4.0/3.0) * np.pi * (BINS/2)**3 * NI
 
 # Differential percentage
-npct = ni * (1/np.sum(ni)) * 100
-apct = ai * (1/np.sum(ai)) * 100
-vpct = vi * (1/np.sum(vi)) * 100
+NPCT = NI * (1/np.sum(NI)) * 100
+APCT = AI * (1/np.sum(AI)) * 100
+VPCT = VI * (1/np.sum(VI)) * 100
 
 # Cumulative percentage
-ncum = np.cumsum(npct, dtype=float)
-acum = np.cumsum(apct, dtype=float)
-vcum = np.cumsum(vpct, dtype=float)
+NCUM = np.cumsum(NPCT, dtype=float)
+ACUM = np.cumsum(APCT, dtype=float)
+VCUM = np.cumsum(VPCT, dtype=float)
 
 # Data for distributions
-np.savetxt(basename + '_distdata.txt', \
-           np.c_[bins, npct, apct, vpct], \
+np.savetxt(BASENAME + '_distdata.txt', \
+           np.c_[BINS, NPCT, APCT, VPCT], \
            fmt=('%07.3f', '%07.3f', '%07.3f', '%07.3f'), delimiter='    ', \
            header='Bins[um]'+1*" "+ 'Number'+5*" "+'Area'+7*" "+'Volume')
 
 ### Plot with matplotlib
-fig = plt.figure(1, figsize=(12, 9))
-fig.set_tight_layout(True)
+FIG = plt.figure(1, figsize=(12, 9))
+FIG.set_tight_layout(True)
 
 # Upper subplot, significant samples
 plt.subplot(211)
@@ -69,89 +69,70 @@ plt.grid(True, which="both")
 plt.title("Significant Sample Average")
 plt.xlabel("Samples")
 plt.ylabel("Cumulative Average")
-plt.plot(avgcum, lw=2.0)
+plt.plot(AVGCUM, lw=2.0)
 
 # Lower subplot, size distributions
-ax = plt.subplot(212)
+AX = plt.subplot(212)
 plt.title("Droplet Size Distribution")
 plt.xlabel("Diameter (um)")
 plt.ylabel("Differential (%)")
 plt.grid(True, which="both")
-plt.xlim((0.01,100.0))
+plt.xlim((0.01, 100.0))
 plt.xscale('log')
-ax.xaxis.set_major_formatter(ScalarFormatter())
-plt.plot(bins, npct, label='Number', lw=2.5, color='red')
-plt.plot(bins, apct, label='Area', lw=2.5, color='purple')
-plt.plot(bins, vpct, label='Volume', lw=2.5, color='green')
+AX.xaxis.set_major_formatter(ScalarFormatter())
+plt.plot(BINS, NPCT, label='Number', lw=2.5, color='red')
+plt.plot(BINS, APCT, label='Area', lw=2.5, color='purple')
+plt.plot(BINS, VPCT, label='Volume', lw=2.5, color='green')
 plt.legend()
 
-fig.savefig(basename + '_distributions.png') # saves to png file
-# plt.ion()
-# plt.pause(0.001)
-# plt.show()
-###
-
-# User input for peaks
-# print('Are there any non-monomodal distributions? Just leave blank if not.')
-# distro = input('(Options: number, area, volume): ') or 'none'
-# if distro is not 'none':
-#     print('\n{0} distribution selected.'.format(distro))
-#     user_diams = input('Input approx values for mins, separated by commas: ')
-#     a = [float(x) for x in user_diams.split(',')]
-#     print(a)
-
+# Save plot to .png file
+FIG.savefig(BASENAME + '_distributions.png')
 
 # Number distributions
-nD10 = distribution(ncum, 10)
-nD50 = distribution(ncum, 50)
-nD90 = distribution(ncum, 90)
+ND10 = distribution(NCUM, 10)
+ND50 = distribution(NCUM, 50)
+ND90 = distribution(NCUM, 90)
 
 # Area distributions
-aD10 = distribution(acum, 10)
-aD50 = distribution(acum, 50)
-aD90 = distribution(acum, 90)
+AD10 = distribution(ACUM, 10)
+AD50 = distribution(ACUM, 50)
+AD90 = distribution(ACUM, 90)
 
 # Volume distributions
-vD10 = distribution(vcum, 10)
-vD50 = distribution(vcum, 50)
-vD90 = distribution(vcum, 90)
+VD10 = distribution(VCUM, 10)
+VD50 = distribution(VCUM, 50)
+VD90 = distribution(VCUM, 90)
 
 # Span
-nspan = (nD90 - nD10)/nD50 
-aspan = (aD90 - aD10)/aD50 
-vspan = (vD90 - vD10)/vD50 
+NSPAN = (ND90 - ND10)/ND50
+ASPAN = (AD90 - AD10)/AD50
+VSPAN = (VD90 - VD10)/VD50
 
 # Mode
-nmode = bins[np.argmax(npct)]
-amode = bins[np.argmax(apct)]
-vmode = bins[np.argmax(vpct)]
+NMODE = BINS[np.argmax(NPCT)]
+AMODE = BINS[np.argmax(APCT)]
+VMODE = BINS[np.argmax(VPCT)]
 
 # Median
-nmedian = bins[np.argmax(ncum>=50)]
-amedian = bins[np.argmax(acum>=50)]
-vmedian = bins[np.argmax(vcum>=50)]
+NMEDIAN = BINS[np.argmax(NCUM >= 50)]
+AMEDIAN = BINS[np.argmax(ACUM >= 50)]
+VMEDIAN = BINS[np.argmax(VCUM >= 50)]
 
 # D[1,0], D[3,2], D[4,3]
-D_1_0 = np.sum(ni * bins)/np.sum(ni)
-D_3_2 = np.sum(ni * bins**3)/np.sum(ni * bins**2)
-D_4_3 = np.sum(ni * bins**4)/np.sum(ni * bins**3)
-# According to Dr. Villafana
-# D_1_0 = np.sum(diameters)/np.sum(ni)
-# D_3_2 = np.sum(diameters**3)/np.sum(diameters**2)
-# D_4_3 = np.sum(diameters**4)/np.sum(diameters**3)
+D_1_0 = np.sum(NI * BINS)/np.sum(NI)
+D_3_2 = np.sum(NI * BINS**3)/np.sum(NI * BINS**2)
+D_4_3 = np.sum(NI * BINS**4)/np.sum(NI * BINS**3)
 
 # Print results to file
-with open(basename + '_granulometry.txt', 'w') as outfile:
-    print(9*" " + 'Number' + 4*" " + 'Area' + 6*" " + 'Volume', file=outfile)
-    print('D10:    {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nD10, aD10, vD10), file=outfile)
-    print('D50:    {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nD50, aD50, vD50), file=outfile)
-    print('D90:    {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nD90, aD90, vD90), file=outfile)
-    print('Span:   {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nspan, aspan, vspan), file=outfile)
-    print('Mode:   {0:6.3f}    {1:6.3f}    {2:6.3f}'.format(nmode, amode, vmode), file=outfile)
-    print('Median: {0:6.3f}    {1:6.3f}    {2:6.3f}\n'.format(nmedian, amedian, vmedian), file=outfile)
+with open(BASENAME + '_granulometry.txt', 'w') as outfile:
+    print(9*" " + 'Number' + 2*" " + 'Area' + 4*" " + 'Volume', file=outfile)
+    print('D10:    {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(ND10, AD10, VD10), file=outfile)
+    print('D50:    {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(ND50, AD50, VD50), file=outfile)
+    print('D90:    {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(ND90, AD90, VD90), file=outfile)
+    print('Span:   {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(NSPAN, ASPAN, VSPAN), file=outfile)
+    print('Mode:   {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(NMODE, AMODE, VMODE), file=outfile)
+    print('Median: {0:6.3f}  {1:6.3f}  {2:6.3f}\n'.format(NMEDIAN, AMEDIAN, VMEDIAN), file=outfile)
     print('D[1,0]: {0:6.3f}'.format(D_1_0), file=outfile)
     print('D[3,2]: {0:6.3f}'.format(D_3_2), file=outfile)
     print('D[4,3]: {0:6.3f}\n'.format(D_4_3), file=outfile)
-    print('Particles: {0}'.format(particles.size), file=outfile)
-
-# plt.show()
+    print('Total particles: {0}'.format(PARTICLES.size), file=outfile)
