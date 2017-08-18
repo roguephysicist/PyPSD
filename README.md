@@ -5,6 +5,8 @@ PyPSD
 
 PyPSD is a Python program for calculating the particle size distribution (PSD) of any sample. Measuring particle sizes and calculating their distribution in a sample is crucial for understanding diverse physical and chemical processes. Particle sizes can be determined with [ImageJ](https://fiji.sc), a free and open-source scientific imaging program (or any other software with this functionality). That data is then used by PyPSD in order to produce the relevant distributions.
 
+![](http://i.imgur.com/eM8dUPk.png?1)
+
 
 Installation and use
 ------------------------------------
