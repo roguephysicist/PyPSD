@@ -14,12 +14,12 @@ Installation and use
 PyPSD has been tested with Python 3 and [Anaconda Python 4+](https://www.continuum.io/downloads) on macOS, Linux, and Windows. It should work on any system with the required Python packages installed.
 
 Python requirements:
-`numpy`, `matplotlib`, `argparse`
+`numpy`, `matplotlib`, `argparse`, `os`
 
 Usage:
-`python pypsd.py [--help] inputfile binsfile`
+`python pypsd.py [--help] -b BINSFILE -i INPUTFILE [-o OUTPUTDIR]`
 
-For maximum compatibility, PyPSD is designed to be executed directly from the command line which is available on all operating systems. The `--help` option will display a useful help message.
+For maximum compatibility, PyPSD is designed to be executed directly from the command line which is available on all operating systems. The `--help` option will display a useful help message. Use the `-b` and `-i` flags to specify your bin and input files. The optional `-o` argument allows you to specify a directory to output your results.
 
 Your input data should be in a text (`.txt`) file with a single column containing the measured particle areas. Your bins should also be in a text file with a single column of bin limits. These are used to classify your particles by diameter. Your bins should obviously be in units compatible with the areas listed in your input file. Sample input (`sample_input.txt`) and bin (`bins.txt`) files are included.
 

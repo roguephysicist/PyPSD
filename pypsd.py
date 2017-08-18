@@ -1,12 +1,13 @@
 '''
-usage: python pypsd.py [-h] inputfile binsfile
+usage: python pypsd.py [-h] -b BINSFILE -i INPUTFILE [-o OUTPUTDIR]
 
 A Python script for calculating the particle size distribution (PSD) of any
-sample.
+sample. Please read the adjoining README.md file for more information.
 
-Written by Sean M. Anderson and Liliana Villafana-Lopez
+Written by Sean M. Anderson and Liliana Villafana-Lopez.
 '''
 
+import os
 import argparse
 import numpy as np
 from matplotlib import pyplot as plt
@@ -14,15 +15,22 @@ from matplotlib.ticker import ScalarFormatter
 
 # Argparse stuff
 PARSER = argparse.ArgumentParser()
-PARSER.add_argument("inputfile", help="File containing the particle areas", type=str)
-PARSER.add_argument("binsfile", help="File containing the particle diameter bins", type=str)
+PARSER.add_argument("-b", dest='binsfile', help="file with particle diameter bins", type=str, required=True)
+PARSER.add_argument("-i", dest='inputfile', help="file with particle areas", type=str, required=True)
+PARSER.add_argument("-o", dest='outputdir', help="output directory", type=str, required=False)
 ARGS = PARSER.parse_args()
 
 # Read input file from command line, create arrays
 INFILE = ARGS.inputfile
 BASENAME = INFILE.split('.txt')[0]
-PARTICLES = np.loadtxt(INFILE)
 BINS = np.loadtxt(ARGS.binsfile, unpack=True)
+PARTICLES = np.loadtxt(INFILE)
+if ARGS.outputdir:
+    OUTPATH = ARGS.outputdir + '/'
+    os.makedirs(OUTPATH, exist_ok=True)
+else:
+    OUTPATH = BASENAME + '_'
+
 
 def distribution(values, cutoff):
     """ a function for creating and then solving a linear equation """
@@ -54,7 +62,7 @@ ACUM = np.cumsum(APCT, dtype=float)
 VCUM = np.cumsum(VPCT, dtype=float)
 
 # Data for distributions
-np.savetxt(BASENAME + '_distdata.txt', \
+np.savetxt(OUTPATH + 'distdata.txt', \
            np.c_[BINS, NPCT, APCT, VPCT], \
            fmt=('%07.3f', '%07.3f', '%07.3f', '%07.3f'), delimiter='    ', \
            header='Bins[um]'+1*" "+ 'Number'+5*" "+'Area'+7*" "+'Volume')
@@ -86,7 +94,7 @@ plt.plot(BINS, VPCT, label='Volume', lw=2.5, color='green')
 plt.legend()
 
 # Save plot to .png file
-FIG.savefig(BASENAME + '_distributions.png')
+FIG.savefig(OUTPATH + 'distributions.png')
 
 # Number distributions
 ND10 = distribution(NCUM, 10)
@@ -124,7 +132,7 @@ D_3_2 = np.sum(NI * BINS**3)/np.sum(NI * BINS**2)
 D_4_3 = np.sum(NI * BINS**4)/np.sum(NI * BINS**3)
 
 # Print results to file
-with open(BASENAME + '_granulometry.txt', 'w') as outfile:
+with open(OUTPATH + 'granulometry.txt', 'w') as outfile:
     print(9*" " + 'Number' + 2*" " + 'Area' + 4*" " + 'Volume', file=outfile)
     print('D10:    {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(ND10, AD10, VD10), file=outfile)
     print('D50:    {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(ND50, AD50, VD50), file=outfile)
