@@ -1,0 +1,30 @@
+# To-do
+* PyPSD:
+    1. Take bin limits AND bin average into account, see Merkus book and hariba
+       website below.
+    2. Look into "critical pressure" program I did for Lili for simpler way to
+       solve linear equations.
+    3. Optimize and reduce the program, use dictionaries, etc. consider how best
+       to deliver the results, and if plotting is still worth it.
+
+
+# Useful links
+https://www.youtube.com/watch?v=D1qBaFwuF4E
+http://imagej.net/Particle_Analysis
+https://dbuscombe-usgs.github.io/DGS_Project/
+https://github.com/marcoalopez/GrainSizeTools
+https://openresearchsoftware.metajnl.com/articles/10.5334/jors.bh/
+https://www.researchgate.net/post/Can_anyone_suggest_evaluate_open_codes_for_particle_size_distribution_image_analysis
+http://www.horiba.com/fr/scientific/products/particle-characterization/education/general-information/data-interpretation/understanding-particle-size-distribution-calculations/
+
+# Several ideas
+1. Make a full blown package from PyPSD, including particle analysis. Check
+   other packages and compare functionality. If viable, this can be published in
+   both JOSS and JORS.
+2. Create an in-depth method for doing particle analysis studies geared towards
+   microalgae. Using two sets of distinct microalgae at two different stages
+   (whole and disrupted), plus a model emulsion dataset (5 datasets total) would
+   be ideal. The different series can also be analyzed in the granulometer, and
+   also by hand counting/measuring, yielding a very well characterized reference
+   set. This could be published in a journal concerning computer data analysis,
+   citing the above references.

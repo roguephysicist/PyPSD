@@ -120,6 +120,8 @@ VSPAN = (VD90 - VD10)/VD50
 NMODE = BINS[np.argmax(NPCT)]
 AMODE = BINS[np.argmax(APCT)]
 VMODE = BINS[np.argmax(VPCT)]
+UNIQ, INDICES = np.unique(PARTICLES, return_inverse=True)
+PMODE = UNIQ[np.argmax(np.bincount(INDICES))]
 
 # Median
 NMEDIAN = BINS[np.argmax(NCUM >= 50)]
@@ -127,20 +129,24 @@ AMEDIAN = BINS[np.argmax(ACUM >= 50)]
 VMEDIAN = BINS[np.argmax(VCUM >= 50)]
 
 # D[1,0], D[3,2], D[4,3]
-D_1_0 = np.sum(NI * BINS)/np.sum(NI)
+D_1_0 = np.sum(NI * BINS)/PARTICLES.size
 D_3_2 = np.sum(NI * BINS**3)/np.sum(NI * BINS**2)
 D_4_3 = np.sum(NI * BINS**4)/np.sum(NI * BINS**3)
+# D_1_0 = np.sum(DIAMETERS)/PARTICLES.size
+# D_3_2 = np.sum(DIAMETERS**3)/np.sum(DIAMETERS**2)
+# D_4_3 = np.sum(DIAMETERS**4)/np.sum(DIAMETERS**3)
 
 # Print results to file
 with open(OUTPATH + 'granulometry.txt', 'w') as outfile:
-    print(9*" " + 'Number' + 2*" " + 'Area' + 4*" " + 'Volume', file=outfile)
-    print('D10:    {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(ND10, AD10, VD10), file=outfile)
-    print('D50:    {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(ND50, AD50, VD50), file=outfile)
-    print('D90:    {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(ND90, AD90, VD90), file=outfile)
-    print('Span:   {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(NSPAN, ASPAN, VSPAN), file=outfile)
-    print('Mode:   {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(NMODE, AMODE, VMODE), file=outfile)
-    print('Median: {0:6.3f}  {1:6.3f}  {2:6.3f}\n'.format(NMEDIAN, AMEDIAN, VMEDIAN), file=outfile)
+    print(15*" " + 'Number' + 2*" " + 'Area' + 4*" " + 'Volume', file=outfile)
+    print('D10:          {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(ND10, AD10, VD10), file=outfile)
+    print('D50:          {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(ND50, AD50, VD50), file=outfile)
+    print('D90:          {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(ND90, AD90, VD90), file=outfile)
+    print('Span:         {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(NSPAN, ASPAN, VSPAN), file=outfile)
+    print('Mode (bins):  {0:6.3f}  {1:6.3f}  {2:6.3f}'.format(NMODE, AMODE, VMODE), file=outfile)
+    print('Median:       {0:6.3f}  {1:6.3f}  {2:6.3f}\n'.format(NMEDIAN, AMEDIAN, VMEDIAN), file=outfile)
     print('D[1,0]: {0:6.3f}'.format(D_1_0), file=outfile)
     print('D[3,2]: {0:6.3f}'.format(D_3_2), file=outfile)
     print('D[4,3]: {0:6.3f}\n'.format(D_4_3), file=outfile)
+    print('Mode (diameter): {0}'.format(PMODE), file=outfile)
     print('Total particles: {0}'.format(PARTICLES.size), file=outfile)
